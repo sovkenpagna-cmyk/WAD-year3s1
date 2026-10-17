@@ -3,18 +3,102 @@ import streamlit as st
 import pandas as pd
 
 st.set_page_config(
-    page_title="EduRisk Analytics - Lab 02",
+    page_title="EduRisk Analytics - Lab 03",
     page_icon="🎓",
     layout="wide"
 )
 
-student_df = pd.DataFrame({
-    "Student Name": ["Dara", "Sophea", "Vuthy", "Malis", "Rithy", "Sreyneang", "Chan", "Bopha"],
-    "Course": ["Python", "Statistics", "Python", "Database", "Web App", "Database", "Python", "Statistics"],
-    "Score": [85, 68, 45, 92, 58, 91, 72, 62],
-    "Attendance": [90, 75, 50, 95, 60, 94, 80, 88],
-    "Study Hours": [12, 8, 3, 15, 5, 14, 9, 7]
-})
+def load_student_data():
+    try:
+        data = pd.read_csv("students.csv")
+        return data
+    except FileNotFoundError:
+        st.error(
+            "students.csv was not found. Please place it in the same folder as app.py."
+        )
+        st.stop()
+
+#laod the student data
+student_df = load_student_data()
+
+#added custom css
+
+st.markdown("""
+<style>
+.stApp { background-color: #0E1A2B; }
+.block-container { padding-top: 2.5rem; max-width: 1200px; }
+
+h1, h2, h3 { color: #FFFFFF !important; }
+.stApp p, .stApp label, .stApp span { color: #E8EEF7; }
+
+/* Sidebar */
+section[data-testid="stSidebar"] {
+    background-color: #091321;
+    border-right: 1px solid #26406B;
+}
+ /* DESIGN: white sidebar title with a teal underline */
+    section[data-testid="stSidebar"] h1 {
+        color: #FFFFFF;
+        border-bottom: 2px solid #1E7A5F;
+        padding-bottom: 6px;
+    }
+
+section[data-testid="stSidebar"] * { color: #E8EEF7 !important; }
+
+/* Metric boxes */
+div[data-testid="stMetric"] {
+    background-color: #162640;
+    border: 1px solid #26406B;
+    border-top: 4px solid #2EC4B6;
+    border-radius: 12px;
+    padding: 16px 20px;
+}
+div[data-testid="stMetricLabel"] * { color: #9FB0C7 !important; }
+div[data-testid="stMetricValue"] * { color: #FFFFFF !important; }
+
+/* Form box */
+div[data-testid="stForm"] {
+    background-color: #162640;
+    border: 1px solid #26406B;
+    border-radius: 12px;
+    padding: 1rem;
+}
+
+/* Buttons */
+.stButton > button, .stDownloadButton > button, .stFormSubmitButton > button {
+    background-color: #2EC4B6;
+    color: #04201D !important;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+}
+.stButton > button:hover, .stDownloadButton > button:hover, .stFormSubmitButton > button:hover {
+    background-color: #5FE0D4;
+}
+
+/* Table */
+div[data-testid="stDataFrame"] {
+    border: 1px solid #26406B;
+    border-radius: 10px;
+}
+    /* DESIGN: navy download button, different from the teal action buttons */
+    .stDownloadButton button {
+        background-color: #0F2238;
+        color: #FFFFFF;
+        border: 1px solid #0F2238;
+    }
+ /* DESIGN: rounded message boxes (success / info / warning / error) */
+    [data-testid="stAlert"] {
+        border-radius: 8px;
+    }
+
+
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+</style>
+""", unsafe_allow_html=True)
+
+
 
 def get_risk_level(score, attendance):
     if score < 60 or attendance < 60:
@@ -24,9 +108,31 @@ def get_risk_level(score, attendance):
     else:
         return "Low Risk"
 
+#add the risk level column
+
 student_df["Risk Level"] = student_df.apply(
-    lambda row: get_risk_level(row["Score"], row["Attendance"]),
+    lambda row: get_risk_level(
+        row["Score"],
+        row["Attendance"]
+    ),
     axis=1
+)
+
+# ------------------------------------------------------------
+# 6. DESIGN: RISK LEVEL COLOURS
+# green = Low, yellow = Medium, red = High
+# ------------------------------------------------------------
+risk_colors = {
+    "Low Risk": "background-color: #DCFCE7; color: #166534",
+    "Medium Risk": "background-color: #FEF3C7; color: #92400E",
+    "High Risk": "background-color: #FEE2E2; color: #991B1B"
+}
+
+# DESIGN: paint only the "Risk Level" column of a table
+def color_risk(df):
+    return df.style.map(
+        lambda value: risk_colors.get(value, ""),
+        subset=["Risk Level"]
     )
 
 total_students = len(student_df)
@@ -45,69 +151,28 @@ with st.sidebar:
 #Home Page
 if selected_page == "Home":
     st.title("🎓 EduRisk Analytics")
-    st.subheader("Interactive Student Risk Monitoring Dashboard")
-    st.write("Welcome to Lab 02.")
-    st.write("In this lab, you will use Streamlit widgets to explore student performance data.")
-    st.success("Lab 02 app is running successfully!")
-
+    st.subheader("Frontend Prototype with CSV Data Loading")
+    st.write("Welcome to Lab 03.")
+    st.write(
+        "In this lab, the app loads student data from students.csv "
+        "using Pandas instead of storing data directly inside app.py."
+    )
+    st.success("Lab 03 app is running successfully!")
+    
 #Dashboard Page
 elif selected_page == "Dashboard":
-    st.title("Interactive Dashboard")
+    st.title("Dashboard Prototype")
 
-# Filter by Course
-    selected_course = st.selectbox(
-        "Select Course",
-        ["All"] + list(student_df["Course"].unique())
-    )
-# Filter by Risk Level
-    selected_risk = st.selectbox(
-        "Select Risk Level",
-        ["All", "Low Risk", "Medium Risk", "High Risk"]
-    )
-# Filter by Minimum Score
-    min_attendance = st.slider(
-        "Minimum Attendance",
-        0,
-        100,
-        0
-    )
-# Filter by Minimum Score
-    min_score = st.slider(
-        "Minimum Score",
-        0,
-        100,
-        0
+    st.write(
+        "This dashboard gives a quick overview of student performance "
+        "using data loaded from students.csv."
     )
 
-# Filter the DataFrame based on user selections
-    filtered_df = student_df.copy()
-
-    if selected_course != "All":
-        filtered_df = filtered_df[filtered_df["Course"] == selected_course]
-
-    if selected_risk != "All":
-        filtered_df = filtered_df[filtered_df["Risk Level"] == selected_risk]
-
-    filtered_df = filtered_df[
-        filtered_df["Attendance"] >= min_attendance
-    ]
-
-    filtered_df = filtered_df[
-        filtered_df["Score"] >= min_score
-    ]
-
-# Calculate metrics based on filtered data
-    total_students = len(filtered_df)
-
-    if len(filtered_df) > 0:
-        average_score = filtered_df["Score"].mean()
-        average_attendance = filtered_df["Attendance"].mean()
-    else:
-        average_score = 0
-        average_attendance = 0
-
-    high_risk_students = filtered_df[
-        filtered_df["Risk Level"] == "High Risk"
+    total_students = len(student_df)
+    average_score = student_df["Score"].mean()
+    average_attendance = student_df["Attendance"].mean()
+    high_risk_students = student_df[
+        student_df["Risk Level"] == "High Risk"
     ].shape[0]
 
     st.subheader("Dashboard Metrics")
@@ -126,80 +191,47 @@ elif selected_page == "Dashboard":
     with col4:
         st.metric("High Risk", high_risk_students)
 
-#checkbox
-    show_data = st.checkbox("Show Filtered Dataset", True)
+    st.subheader("Student Records")
+    st.write("This table shows student data loaded from students.csv.")
+    st.dataframe(student_df)
 
-    if show_data:
-        st.subheader("Filtered Student Dataset")
-        st.dataframe(filtered_df)
-    else:
-        st.info("Filtered dataset is hidden.")
-
-#add download button
-        csv = filtered_df.to_csv(index=False)
-
-        st.download_button(
-            label="Download Filtered Data",
-            data=csv,
-            file_name="filtered_student_data.csv",
-            mime="text/csv"
-        )
-
-#Add a bar chart to show student scores.
     st.subheader("Charts")
 
     chart_col1, chart_col2 = st.columns(2)
 
     with chart_col1:
-        st.write("Student Scores")
+        st.write("Student Score Chart")
+        score_chart = student_df.set_index("Student Name")["Score"]
+        st.bar_chart(score_chart)
 
-        if len(filtered_df) > 0:
-            score_chart = filtered_df.set_index("Student Name")["Score"]
-            st.bar_chart(score_chart)
-        else:
-            st.warning("No data available for score chart.")
-
-#Add a bar chart to show the count of each risk level.
     with chart_col2:
-        st.write("Risk Level Count")
+        st.write("Course Count")
+        course_count = student_df["Course"].value_counts()
+        st.bar_chart(course_count)
 
-        if len(filtered_df) > 0:
-            risk_count = filtered_df["Risk Level"].value_counts()
-            st.bar_chart(risk_count)
-        else:
-            st.warning("No data available for risk chart.")
+        st.info(
+        "Ethics Reminder: Academic monitoring should support students, "
+        "not label or punish them."
+    )
 
-#
-
-    st.write("Use the filters below to explore student performance.")
-
-    if st.button("Click Me"):
-        st.write("Welcome")
 
 #Update the Student Data page to show the full dataset with risk levels.
 elif selected_page == "Student Data":
     st.title("Student Data")
 
-    total_students = len(student_df)
-    average_score = student_df["Score"].mean()
-    average_attendance = student_df["Attendance"].mean()
-    high_risk_students = student_df[
-        student_df["Risk Level"] == "High Risk"
-    ].shape[0]
+    st.write(
+        "This page displays and inspects the dataset loaded from students.csv."
+    )
 
-    col1, col2, col3, col4 = st.columns(4)
+    st.subheader("Data Inspection")
 
-    with col1:
-        st.metric("Total Students", total_students)
+    st.write("Rows and Columns:", student_df.shape)
 
-    with col2:
-        st.metric("Average Score", round(average_score, 2))
+    st.write("Column Names:")
+    st.write(student_df.columns.tolist())
 
-    with col3:
-        st.metric("Average Attendance", f"{round(average_attendance, 2)}%")
-
-    with col4:
-        st.metric("High Risk Students", high_risk_students)
+    st.write("First 5 Rows:")
+    st.dataframe(student_df.head())
 
     st.subheader("Full Student Dataset")
     st.dataframe(student_df)
@@ -207,6 +239,11 @@ elif selected_page == "Student Data":
 #Create a page where users can enter one student's score and attendance to check risk level.
 elif selected_page == "Risk Checker":
     st.title("Single Student Risk Checker")
+
+    st.write(
+        "Use this page to check the risk level of one student based on" \
+        "score and attendance."
+    )
 
     with st.form("risk_checker_form"):
         input_name = st.text_input("Student Name")
@@ -232,8 +269,18 @@ elif selected_page == "Risk Checker":
 
 else:
     st.title("About")
-    st.write("This app is part of Lab 02.")
+
+    st.write("This app is part of Lab 03.")
     st.write("Course: Web App Development for Data Science")
     st.write("Project Theme: EduRisk Analytics")
-    st.write("Topic: Streamlit Interactive Dashboard")
-    st.info("Ethics Reminder: Risk prediction should support students, not punish them.")
+    st.write("Topic: Data Loading, Layout, and Frontend Prototype")
+
+    st.info(
+        "This frontend prototype loads real data from students.csv "
+        "and displays it using Streamlit and Pandas."
+    )
+
+    st.warning(
+        "Ethics Reminder: Student risk information should be used responsibly "
+        "to support learning and student success."
+    )
